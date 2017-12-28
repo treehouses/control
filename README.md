@@ -31,7 +31,7 @@ After rebooting your RPi, Open terminal and run this command to listen to discov
 
 Open another terminal and run the python code
 
-`python2 /home/pi/DIRECTORY_TO_YOUR_PYTHON_CODE/bluetooth-RPi-wifi.py`
+`python2 /home/pi/DIRECTORY_TO_YOUR_PYTHON_CODE/bluetooth-server.py`
 
 NOTE: make sure your RPi is in “discoverable” status or your Android device might not find it, you can do it by clicking “Make Discoverable()” in bluetooth interface
 
@@ -56,7 +56,7 @@ After=bluetooth.service
 Requires=bluetooth.service
 
 [Service]	
-ExecStart=/usr/bin/rfcomm watch hci0 &; /usr/bin/python2 /home/pi/DIRECTORY_TO_YOUR_PYTHON_CODE/bluetooth-RPi-wifi.py	
+ExecStart=/usr/bin/rfcomm watch hci0 &; /usr/bin/python2 /home/pi/DIRECTORY_TO_YOUR_PYTHON_CODE/bluetooth-server.py	
 
 [Install]
 WantedBy=multi-user.target
