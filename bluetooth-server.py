@@ -68,48 +68,11 @@ class SerialComm:
 
     def wifi_connect(self, ssid, psk):
         # write wifi config to file
-        f = open('wifi.conf', 'w')
-        f.write('country=US\n')
-        f.write('ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\n')
-        f.write('update_config=1\n')
-        f.write('\n')
-        f.write('network={\n')
-        f.write('    ssid="' + ssid + '"\n')
-        f.write('    psk="' + psk + '"\n')
-        f.write('}\n')
-        f.close()
+        cmd = ['pirateship', 'wifi', ssid, psk]
+        pirateship_wifi_output = subprocess.check_output(cmd)
+        self.send_serial(pirateship_wifi_output)
 
-        cmd = 'sudo mv wifi.conf ' + wpa_supplicant_conf
-        cmd_result = ""
-        cmd_result = os.system(cmd)
-        print cmd + " - " + str(cmd_result)
-
-        # restart wifi adapter
-        cmd = sudo_mode + 'ifdown wlan0'
-        cmd_result = os.system(cmd)
-        print cmd + " - " + str(cmd_result)
-
-        time.sleep(2)
-
-        cmd = sudo_mode + 'ifup wlan0'
-        cmd_result = os.system(cmd)
-        print cmd + " - " + str(cmd_result)
-
-        time.sleep(10)
-
-        cmd = 'iwconfig wlan0'
-        cmd_result = os.system(cmd)
-        print cmd + " - " + str(cmd_result)
-
-        cmd = 'ifconfig wlan0'
-        cmd_result = os.system(cmd)
-        print cmd + " - " + str(cmd_result)
-
-        p = subprocess.Popen(['ifconfig', 'wlan0'], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-
-        out, err = p.communicate()
-
+        p = subprocess.check_output(['ifconfig', 'wlan0'])
         ip_address = "<Not Set>"
 
         for l in out.split('\n'):
