@@ -83,7 +83,7 @@ class BluetoothServer(object):
       try:
         self._logger.info("Waiting for connections")
         self.set_discoverable(True)
-        self._client_socket, cliahent_info = self._server_socket.accept()
+        self._client_socket, client_info = self._server_socket.accept()
         self._logger.info("Connection from %s on channel %d", client_info[0],
                           client_info[1])
       except bluetooth.BluetoothError as error:
