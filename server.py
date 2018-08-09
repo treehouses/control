@@ -8,6 +8,9 @@ import signal
 import subprocess
 import sys
 import threading
+import socket
+import string
+import random
 
 _closables = []
 
@@ -35,6 +38,7 @@ class BluetoothServer(object):
             "org.bluez", "/org/bluez/hci0"), "org.freedesktop.DBus.Properties")
         self._adapter.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
         self._closed = False
+        self.set_host_name()
 
     def __del__(self):
         self.Close()
@@ -141,6 +145,12 @@ class BluetoothServer(object):
     def get_msg(self):
         data = self._client_socket.recv(1024).decode("utf-8")
         return str(data)
+
+    def set_host_name(self):
+        bt_name = "%s-%s" % (socket.gethostname(), ''.join(random.sample((string.digits), 4)))
+        self._device_name = bt_name
+        self._logger.info("Setting device name: '%s'", bt_name)
+        self._adapter.Set("org.bluez.Adapter1", "Alias", dbus.String(bt_name))
 
 
 if __name__ == "__main__":
