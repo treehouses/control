@@ -11,6 +11,7 @@ import threading
 import socket
 import string
 import random
+import os
 
 _closables = []
 
@@ -147,7 +148,17 @@ class BluetoothServer(object):
         return str(data)
 
     def set_host_name(self):
-        bt_name = "%s-%s" % (socket.gethostname(), ''.join(random.sample((string.digits), 4)))
+        if not os.path.exists('/etc/bluetooth-id'):
+            bt_device_number = ''.join(random.sample((string.digits), 4))
+            f = open("/etc/bluetooth-id", "w")
+            f.write(bt_device_number)
+            f.close()
+        else:
+            f = open("/etc/bluetooth-id", "r")
+            bt_device_number = f.read()
+            f.close()
+
+        bt_name = "%s-%s" % (socket.gethostname(), bt_device_number)
         self._device_name = bt_name
         self._logger.info("Setting device name: '%s'", bt_name)
         self._adapter.Set("org.bluez.Adapter1", "Alias", dbus.String(bt_name))
