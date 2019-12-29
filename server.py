@@ -138,9 +138,9 @@ class BluetoothServer(object):
             self.send_msg("Error when trying to run the command '%s' " % msg)
 
     def send_msg(self, message):
-        self._logger.info("SendMessage: %s" % message)
         if self._client_socket is None:
             return
+        self._logger.info("SendMessage: %s" % message)
         self._client_socket.send(message)
 
     def get_msg(self):
