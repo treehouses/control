@@ -69,12 +69,11 @@ class BluetoothServer(object):
         self._server_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self._server_socket.bind(("", bluetooth.PORT_ANY))
         self._server_socket.listen(1)
-        uuid = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
         self.hci_config_command("piscan")
         bluetooth.advertise_service(
             self._server_socket,
             "rpi-bluetooth-server",
-            service_classes=[uuid,bluetooth.SERIAL_PORT_CLASS],
+            service_classes=[bluetooth.SERIAL_PORT_CLASS],
             profiles=[bluetooth.SERIAL_PORT_PROFILE])
 
         while True:
