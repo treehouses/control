@@ -69,6 +69,7 @@ class BluetoothServer(object):
         self._server_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self._server_socket.bind(("", bluetooth.PORT_ANY))
         self._server_socket.listen(1)
+        self.hci_config_command("piscan")
 
         bluetooth.advertise_service(
             self._server_socket,
