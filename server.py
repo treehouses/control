@@ -134,7 +134,7 @@ class BluetoothServer(object):
         try:
             result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
             if not len(result):
-                self.send_msg("the command '%s' return nothing " % msg)
+                self.send_msg("the command '%s' returns nothing " % msg)
             for line in result.splitlines():
                 self.send_msg(line + " ")
         except:
