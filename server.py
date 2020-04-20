@@ -143,7 +143,7 @@ class BluetoothServer(object):
     def send_msg(self, message):
         if self._client_socket is None:
             return
-        self._logger.info("SendMessage: %s" % message)
+        self._logger.info("SendMessage: o: %s ;" % message)
         self._client_socket.send("o: %s ;" % message)
 
     def get_msg(self):
