@@ -127,7 +127,7 @@ class BluetoothServer(object):
     def handle_connection(self):
         while True:
             received_msg = self.get_msg()
-            self._logger.info("Received request '%s'" % received_msg)
+            self._logger.info("Received request '%s'" % received_msg.rstrip())
             self.handle_request(received_msg)
 
     def handle_request(self, msg):
