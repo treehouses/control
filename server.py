@@ -132,6 +132,7 @@ class BluetoothServer(object):
 
     def handle_request(self, msg):
         try:
+            self.send_msg("::start::")
             result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
@@ -139,12 +140,14 @@ class BluetoothServer(object):
                 self.send_msg(line + " ")
         except:
             self.send_msg("Error when trying to run the command '%s' " % msg)
+        finally:
+            self.send_msg("::end::")
 
     def send_msg(self, message):
         if self._client_socket is None:
             return
-        self._logger.info("SendMessage: o: %s ;" % message)
-        self._client_socket.send("o: %s ;" % message)
+        self._logger.info("SendMessage: %s" % message)
+        self._client_socket.send(message)
 
     def get_msg(self):
         data = self._client_socket.recv(1024).decode("utf-8")
