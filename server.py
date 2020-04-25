@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-import bluetooth
-import dbus
 import logging
 import logging.handlers
 import os
@@ -11,6 +9,8 @@ import threading
 import socket
 import string
 import random
+import bluetooth
+import dbus
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
@@ -139,7 +139,7 @@ class Server():
         self.accept_connections()
         self.set_discoverable(False)
 
-    def kill(self): 
+    def kill(self):
         self.server_sock.close()
         self.set_discoverable(False)
         sys.exit()
