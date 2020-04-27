@@ -26,14 +26,14 @@ class Worker(threading.Thread):
         self.stopped = False
 
     def send_msg(self, message):
-        self._logger.info("SendMessage: %s" % message)
+        self._logger.info("%s S - %s" % (self.address[0][12:], message))
         self.sock.send(message)
 
     def get_msg(self):
         data = str(self.sock.recv(1024).decode("utf-8"))
         if len(data) == 0:
             self.stopped = True
-        self._logger.info("received data from device %s on %s:  [%s]" % (self.address[0], threading.current_thread().getName(), data))
+        self._logger.info("%s R %s" % (self.address[0][12:], data))
         return data
 
     def handle_request(self, msg):
@@ -50,7 +50,6 @@ class Worker(threading.Thread):
             #self.send_msg("::end::")
 
     def run(self):
-        self._logger.info("worker %s has started." % threading.current_thread().getName())
         try:
             while True:
                 self.handle_request(self.get_msg())
@@ -97,7 +96,7 @@ class Server():
         self.server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.server_sock.bind(("", self.port))
         self.server_sock.listen(self.q_len)  #Queue up as many as 5 connect requests.
-        self._logger.info("listening on port %d" % self.port)
+        self._logger.info("Listening on port %d" % self.port)
 
     def advertise_service(self):
         bluetooth.advertise_service(
@@ -111,11 +110,8 @@ class Server():
         while True:
             self._logger.info("Waiting for connections")
             client_sock, address = self.server_sock.accept()
-            self._logger.info("accepted connection from %s" % address[0])
+            self._logger.info("Accepted connection from %s" % address[0])
             Worker(client_sock, address).start()  #Spawns the worker thread.
-            self._logger.info("number of current threads is %s" % threading.active_count())
-            for thread in threading.enumerate():
-                self._logger.info(thread.getName())
 
     def set_discoverable(self, discoverable):
         adapter = self._adapter
