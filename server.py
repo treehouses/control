@@ -58,6 +58,7 @@ class Worker(threading.Thread):
         except Exception as e:
             pass
         self.sock.close()
+        self._logger.info("Disconnected from %s" % self.address[0])
 
 class Server():
     def __init__(self):
@@ -108,7 +109,7 @@ class Server():
 
     def accept_connections(self):
         while True:
-            self._logger.info("Waiting for connections")
+            self._logger.info("Main thread waiting for connections")
             client_sock, address = self.server_sock.accept()
             self._logger.info("Accepted connection from %s" % address[0])
             Worker(client_sock, address).start()  #Spawns the worker thread.
