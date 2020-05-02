@@ -38,7 +38,7 @@ class Worker(threading.Thread):
 
     def handle_request(self, msg):
         try:
-            #self.send_msg("::start::")
+            self.send_msg("::start::")
             result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
@@ -46,8 +46,8 @@ class Worker(threading.Thread):
                 self.send_msg(line + " ")
         except:
             self.send_msg("Error when trying to run the command '%s' " % msg)
-        #finally:
-            #self.send_msg("::end::")
+        finally:
+            self.send_msg("::end::")
 
     def run(self):
         try:
