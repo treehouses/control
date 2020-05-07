@@ -17,6 +17,7 @@ def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     os.kill(os.getpid(), signal.SIGINT)
 
 #This is what gets spawned by the server when it receives a connection.
+# based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
 class Worker(threading.Thread):
     def __init__(self, sock, address):
         threading.Thread.__init__(self)
