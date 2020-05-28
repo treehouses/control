@@ -1,158 +1,150 @@
-#!/usr/bin/python3
-import logging
-import logging.handlers
-import os
-import signal
-import subprocess
-import sys
-import threading
-import socket
-import string
-import random
-import bluetooth.ble
-import dbus
-
-def _ExceptionHandler(exc_type, exc_value, exc_traceback):
-    sys.__excepthook__(exc_type, exc_value, exc_traceback)
-    os.kill(os.getpid(), signal.SIGINT)
-
-#This is what gets spawned by the server when it receives a connection.
-# based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
-class Worker(threading.Thread):
-    def __init__(self, sock, address):
-        threading.Thread.__init__(self)
-        self.sock = sock
-        self.address = address
-        self._logger = logging.getLogger("logger")
-        self.stopped = False
-
-    def send_msg(self, message):
-        self._logger.info("%s S - %s" % (self.address[0][12:], message))
-        self.sock.send(message)
-
-    def get_msg(self):
-        data = str(self.sock.recv(1024).decode("utf-8"))
-        if len(data) == 0:
-            self.stopped = True
-        self._logger.info("%s R %s" % (self.address[0][12:], data))
-        return data
-
-    def handle_request(self, msg):
-        try:
-            #self.send_msg("::start::")
-            result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
-            if not len(result):
-                self.send_msg("the command '%s' returns nothing " % msg)
-            for line in result.splitlines():
-                self.send_msg(line + " ")
-        except:
-            self.send_msg("Error when trying to run the command '%s' " % msg)
-        #finally:
-            #self.send_msg("::end::")
-
-    def run(self):
-        try:
-            while True:
-                self.handle_request(self.get_msg())
-                if self.stopped:
-                    break
-        except Exception as e:
+import sys, os, socket, string, random
+import dbus, dbus.mainloop.glib
+from gi.repository import GLib
+from example_advertisement import Advertisement
+from example_advertisement import register_ad_cb, register_ad_error_cb
+from example_gatt_server import Service, Characteristic
+from example_gatt_server import register_app_cb, register_app_error_cb
+ 
+BLUEZ_SERVICE_NAME =           'org.bluez'
+DBUS_OM_IFACE =                'org.freedesktop.DBus.ObjectManager'
+LE_ADVERTISING_MANAGER_IFACE = 'org.bluez.LEAdvertisingManager1'
+GATT_MANAGER_IFACE =           'org.bluez.GattManager1'
+GATT_CHRC_IFACE =              'org.bluez.GattCharacteristic1'
+UART_SERVICE_UUID =            '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
+UART_RX_CHARACTERISTIC_UUID =  '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
+UART_TX_CHARACTERISTIC_UUID =  '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
+mainloop = None
+ 
+class TxCharacteristic(Characteristic):
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(self, bus, index, UART_TX_CHARACTERISTIC_UUID,
+                                ['notify'], service)
+        self.notifying = False
+        GLib.io_add_watch(sys.stdin, GLib.IO_IN, self.on_console_input)
+ 
+    def on_console_input(self, fd, condition):
+        s = fd.readline()
+        if s.isspace():
             pass
-        self.sock.close()
-        self._logger.info("Disconnected from %s" % self.address[0])
-
-class Server():
-    def __init__(self):
-        self.q_len = 3
-        self.port = bluetooth.PORT_ANY
-        self.server_sock = None
-        self.name = "rpi-bluetooth-server"
-        self.uuid = "00001101-0000-1000-8000-00805F9B34FB"
-        self._logger = logging.getLogger("logger")
-        self._adapter = dbus.Interface(dbus.SystemBus().get_object(
-            "org.bluez", "/org/bluez/hci0"), "org.freedesktop.DBus.Properties")
-        self._adapter.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
-        self.set_host_name()
-
-    def set_host_name(self):
-        if not os.path.exists('/etc/bluetooth-id'):
-            bt_device_number = ''.join(random.sample((string.digits), 4))
-            f = open("/etc/bluetooth-id", "w")
-            f.write(bt_device_number)
-            f.close()
         else:
-            f = open("/etc/bluetooth-id", "r")
-            bt_device_number = f.read()
-            f.close()
+            self.send_tx(s)
+        return True
+ 
+    def send_tx(self, s):
+        if not self.notifying:
+            return
+        value = []
+        for c in s:
+            value.append(dbus.Byte(c.encode()))
+        self.PropertiesChanged(GATT_CHRC_IFACE, {'Value': value}, [])
+ 
+    def StartNotify(self):
+        if self.notifying:
+            return
+        self.notifying = True
+ 
+    def StopNotify(self):
+        if not self.notifying:
+            return
+        self.notifying = False
+ 
+class RxCharacteristic(Characteristic):
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(self, bus, index, UART_RX_CHARACTERISTIC_UUID,
+                                ['write'], service)
+ 
+ # Sends message to device
+    def WriteValue(self, value, options):
+        print('remote: {}'.format(bytearray(value).decode()))
+ 
+class UartService(Service):
+    def __init__(self, bus, index):
+        Service.__init__(self, bus, index, UART_SERVICE_UUID, True)
+        self.add_characteristic(TxCharacteristic(bus, 0, self))
+        self.add_characteristic(RxCharacteristic(bus, 1, self))
+ 
+class Application(dbus.service.Object):
+    def __init__(self, bus):
+        self.path = '/'
+        self.services = []
+        dbus.service.Object.__init__(self, bus, self.path)
+ 
+    def get_path(self):
+        return dbus.ObjectPath(self.path)
+ 
+    def add_service(self, service):
+        self.services.append(service)
+ 
+    @dbus.service.method(DBUS_OM_IFACE, out_signature='a{oa{sa{sv}}}')
+    def GetManagedObjects(self):
+        response = {}
+        for service in self.services:
+            response[service.get_path()] = service.get_properties()
+            chrcs = service.get_characteristics()
+            for chrc in chrcs:
+                response[chrc.get_path()] = chrc.get_properties()
+        return response
+ 
+class UartApplication(Application):
+    def __init__(self, bus):
+        Application.__init__(self, bus)
+        self.add_service(UartService(bus, 0))
 
-        bt_name = "%s-%s" % (socket.gethostname(), bt_device_number)
-        self._device_name = bt_name
-        self._logger.info("Setting device name: '%s'", bt_name)
-        self._adapter.Set("org.bluez.Adapter1", "Alias", dbus.String(bt_name))
+class UartAdvertisement(Advertisement):
+    def __init__(self, bus, index):
+        Advertisement.__init__(self, bus, index, 'peripheral')
+        self.add_service_uuid(UART_SERVICE_UUID)
+        self.add_local_name(self.get_host_name())
+        self.include_tx_power = True
 
-    def hci_config_command(self, command):
-        subprocess.call("/bin/hciconfig hci0 %s" % command, shell=True)
+    def get_host_name(self):
+        bt_device_number = ''.join(random.sample((string.digits), 4))
+        f = open("/etc/bluetooth-id", "w")
+        f.write(bt_device_number)
+        f.close()  
+        return "%s-%s" % (socket.gethostname(), bt_device_number)
+ 
+def find_adapter(bus):
+    remote_om = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, '/'),
+                               DBUS_OM_IFACE)
+    objects = remote_om.GetManagedObjects()
+    for o, props in objects.items():
+        if LE_ADVERTISING_MANAGER_IFACE in props and GATT_MANAGER_IFACE in props:
+            return o
+        print('Skip adapter:', o)
+    return None
 
-    def start_server(self):
-        self.hci_config_command("piscan")
-        self.server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        self.server_sock.bind(("", self.port))
-        self.server_sock.listen(self.q_len)  #Queue up as many as 5 connect requests.
-        self._logger.info("Listening on port %d" % self.port)
-
-    def advertise_service(self):
-        bluetooth.advertise_service(
-            self.server_sock,
-            self.name,
-            service_id=self.uuid,
-            service_classes=[self.uuid, bluetooth.SERIAL_PORT_CLASS],
-            profiles=[bluetooth.SERIAL_PORT_PROFILE])
-
-    def accept_connections(self):
-        while True:
-            self._logger.info("Main thread waiting for connections")
-            client_sock, address = self.server_sock.accept()
-            self._logger.info("Accepted connection from %s" % address[0])
-            Worker(client_sock, address).start()  #Spawns the worker thread.
-
-    def set_discoverable(self, discoverable):
-        adapter = self._adapter
-        if discoverable:
-            adapter.Set(
-                "org.bluez.Adapter1",
-                "DiscoverableTimeout",
-                dbus.UInt32(0))
-            adapter.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(1))
-            self.hci_config_command("leadv 3")
-            self._logger.info("Discoverable enabled")
-        else:
-            adapter.Set("org.bluez.Adapter1", "Discoverable", dbus.Boolean(0))
-            self.hci_config_command("noleadv")
-            self._logger.info("Discoverable disabled")
-
-    def run(self):
-        self.set_discoverable(True)
-        self.start_server()
-        self.advertise_service()
-        self.accept_connections()
-        self.set_discoverable(False)
-
-    def kill(self):
-        self.server_sock.close()
-        self.set_discoverable(False)
-        sys.exit()
-
-if __name__ == "__main__":
-    sys.excepthook = _ExceptionHandler
-    logger = logging.getLogger("logger")
-    handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter("%(asctime)s: %(message)s")
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-    logger.info("Debug logs enabled")
+def main():
+    global mainloop
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    bus = dbus.SystemBus()
+    adapter = find_adapter(bus)
+    if not adapter:
+        print('BLE adapter not found')
+        return
+ 
+    service_manager = dbus.Interface(
+                                bus.get_object(BLUEZ_SERVICE_NAME, adapter),
+                                GATT_MANAGER_IFACE)
+    ad_manager = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, adapter),
+                                LE_ADVERTISING_MANAGER_IFACE)
+ 
+    app = UartApplication(bus)
+    adv = UartAdvertisement(bus, 0)
+ 
+    mainloop = GLib.MainLoop()
+ 
+    service_manager.RegisterApplication(app.get_path(), {},
+                                        reply_handler=register_app_cb,
+                                        error_handler=register_app_error_cb)
+    ad_manager.RegisterAdvertisement(adv.get_path(), {},
+                                     reply_handler=register_ad_cb,
+                                     error_handler=register_ad_error_cb)
     try:
-        multithreaded_server = Server()
-        multithreaded_server.run()
+        mainloop.run()
     except KeyboardInterrupt:
-        self._logger.info("shutting down the server")
-        multithreaded_server.kill()
+        adv.Release()
+ 
+if __name__ == '__main__':
+    main()
