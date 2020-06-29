@@ -52,13 +52,6 @@ class Worker(threading.Thread):
         else:
             try:
             #self.send_msg("::start::")
-           
-           #if "treehousesremoteservice" in msg:
-               # recieve.file
-                if "treehousesremotehash" in msg:
-                    remoteHash = msg.split(1)
-                    self._logger.info(remoteHash)
-               #self._logger.info(_serverHash)
                 result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
                 if not len(result):
                     self.send_msg("the command '%s' returns nothing " % msg)
