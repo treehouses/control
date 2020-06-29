@@ -17,11 +17,12 @@ def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
     os.kill(os.getpid(), signal.SIGINT)
 
-def hashServerFile():
-    f = open(sys.argv[0],"r",encoding='utf-8')
-    serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
-    f.close()
-    return serverHash
+def _hashServerFile():
+    with open(sys.argv[0],"r",encoding='utf-8') as f:
+        serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
+        return serverHash
+
+_serverHash = _hashServerFile()
 #This is what gets spawned by the server when it receives a connection.
 # based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
 class Worker(threading.Thread):
@@ -31,7 +32,7 @@ class Worker(threading.Thread):
         self.address = address
         self._logger = logging.getLogger("logger")
         self.stopped = False
-        self._logger.info(self.serverHash)
+        self._logger.info(_serverHash)
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
@@ -86,7 +87,6 @@ class Server():
             "org.bluez", "/org/bluez/hci0"), "org.freedesktop.DBus.Properties")
         self._adapter.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
         self.set_host_name()
-        self.serverHash = hashServerFile()
 
     def set_host_name(self):
         if not os.path.exists('/etc/bluetooth-id'):
