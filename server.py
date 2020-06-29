@@ -41,10 +41,11 @@ class Worker(threading.Thread):
         if len(data) == 0:
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
+        self._logger.info(self.serverHash)
         return data
 
     def handle_request(self, msg):
-        self._logger.info(self.serverHash)
+       # self._logger.info(self.serverHash)
         try:
             #self.send_msg("::start::")
            
