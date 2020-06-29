@@ -31,6 +31,7 @@ class Worker(threading.Thread):
         self.address = address
         self._logger = logging.getLogger("logger")
         self.stopped = False
+        self._logger.info(self.serverHash)
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
@@ -41,7 +42,6 @@ class Worker(threading.Thread):
         if len(data) == 0:
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
-        self._logger.info(self.serverHash)
         return data
 
     def handle_request(self, msg):
