@@ -32,7 +32,7 @@ class Worker(threading.Thread):
         self.address = address
         self._logger = logging.getLogger("logger")
         self.stopped = False
-        self._logger.info(_serverHash)
+       #self._logger.info(_serverHash)
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
@@ -52,8 +52,10 @@ class Worker(threading.Thread):
            
            #if "treehousesremoteservice" in msg:
                # recieve.file
-            #if "treehousesremotehash" in msg:
-               # remoteHash = msg.split(1)
+            if "treehousesremotehash" in msg:
+               remoteHash = msg.split(1)
+               self._logger.info(remoteHash)
+               #self._logger.info(_serverHash)
             result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
