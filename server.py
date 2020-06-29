@@ -47,22 +47,25 @@ class Worker(threading.Thread):
 
     def handle_request(self, msg):
        # self._logger.info(self.serverHash)
-        try:
+        if str(msg).find('remotehash') != -1:
+            self.send_msg(str(_serverHash))
+        else:
+            try:
             #self.send_msg("::start::")
            
            #if "treehousesremoteservice" in msg:
                # recieve.file
-            if "treehousesremotehash" in msg:
-               remoteHash = msg.split(1)
-               self._logger.info(remoteHash)
+                if "treehousesremotehash" in msg:
+                    remoteHash = msg.split(1)
+                    self._logger.info(remoteHash)
                #self._logger.info(_serverHash)
-            result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
-            if not len(result):
-                self.send_msg("the command '%s' returns nothing " % msg)
-            for line in result.splitlines():
-                self.send_msg(line + " ")
-        except:
-            self.send_msg("Error when trying to run the command '%s' " % msg)
+                result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
+                if not len(result):
+                    self.send_msg("the command '%s' returns nothing " % msg)
+                for line in result.splitlines():
+                    self.send_msg(line + " ")
+            except:
+                self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
 
