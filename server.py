@@ -44,6 +44,7 @@ class Worker(threading.Thread):
         return data
 
     def handle_request(self, msg):
+        self._logger.info(self.serverHash)
         try:
             #self.send_msg("::start::")
            
@@ -51,7 +52,6 @@ class Worker(threading.Thread):
                # recieve.file
             #if "treehousesremotehash" in msg:
                # remoteHash = msg.split(1)
-            self._logger.info(self.serverHash)
             result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
