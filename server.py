@@ -18,7 +18,7 @@ def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     os.kill(os.getpid(), signal.SIGINT)
 
 def hashServerFile():
-    f = open("server.py","r")
+    f = open(sys.argv[0],"r")
     serverHash = hashlib.sha256(f.read().hexdigest())
     return serverHash
 #This is what gets spawned by the server when it receives a connection.
