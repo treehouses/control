@@ -124,11 +124,6 @@ class Server():
         while True:
             self._logger.info("Main thread waiting for connections")
             client_sock, address = self.server_sock.accept()
-            serverHash = sha(server.py)
-            self._logger.info("test log")
-            if !checkHash(serverHash):
-                serverSync()
-
             self._logger.info("Accepted connection from %s" % address[0])
             Worker(client_sock, address).start()  #Spawns the worker thread.
 
