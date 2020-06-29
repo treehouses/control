@@ -11,11 +11,16 @@ import string
 import random
 import bluetooth
 import dbus
+import hashlib
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
     os.kill(os.getpid(), signal.SIGINT)
 
+def hashServerFile():
+    f = open("server.py","r")
+    serverHash = hashlib.sha256(f.read()).hexdigest())
+    return serverHash
 #This is what gets spawned by the server when it receives a connection.
 # based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
 class Worker(threading.Thread):
@@ -40,6 +45,12 @@ class Worker(threading.Thread):
     def handle_request(self, msg):
         try:
             #self.send_msg("::start::")
+           
+           #if "treehousesremoteservice" in msg:
+               # recieve.file
+            #if "treehousesremotehash" in msg:
+               # remoteHash = msg.split(1)
+            self._logger.info(self.serverHash)
             result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
@@ -73,6 +84,7 @@ class Server():
             "org.bluez", "/org/bluez/hci0"), "org.freedesktop.DBus.Properties")
         self._adapter.Set("org.bluez.Adapter1", "Powered", dbus.Boolean(1))
         self.set_host_name()
+        self.serverHash = hashServerFile()
 
     def set_host_name(self):
         if not os.path.exists('/etc/bluetooth-id'):
