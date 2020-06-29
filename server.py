@@ -20,6 +20,7 @@ def _ExceptionHandler(exc_type, exc_value, exc_traceback):
 def hashServerFile():
     f = open(sys.argv[0],"r",encoding='utf-8')
     serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
+    f.close()
     return serverHash
 #This is what gets spawned by the server when it receives a connection.
 # based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
