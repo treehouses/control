@@ -22,7 +22,8 @@ def _hashServerFile():
         serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
         return serverHash
 
-_serverHash = _hashServerFile()
+_serverHash = _hashServerFile() # send this to remote to compare server versions
+
 #This is what gets spawned by the server when it receives a connection.
 # based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
 class Worker(threading.Thread):
@@ -46,9 +47,12 @@ class Worker(threading.Thread):
         return data
 
     def handle_request(self, msg):
-       # self._logger.info(self.serverHash)
         if str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
+        elif str(msg).find('remotesync') != -1:
+            with open(sys.argv[0],"w",encoding='utf-8') as f:
+                f.write(msg.split(' ', 1)[1])
+            exit()
         else:
             try:
             #self.send_msg("::start::")
