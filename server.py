@@ -51,7 +51,7 @@ class Worker(threading.Thread):
     def handle_request(self, msg):
         if str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
-        elif str(msg).find('remotesync') != -1:
+        elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
