@@ -12,6 +12,8 @@ import random
 import bluetooth
 import dbus
 import hashlib
+import datetime
+from shutuil import copyfile
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
@@ -50,6 +52,7 @@ class Worker(threading.Thread):
         if str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1:
+            copyfile(sys.argv[0], sys.argv[0] + datetime.date)
             with open(sys.argv[0],"w",encoding='utf-8') as f:
                 f.write(msg.split(' ', 1)[1])
             exit()
