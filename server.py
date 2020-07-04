@@ -74,12 +74,13 @@ class Worker(threading.Thread):
             #self.send_msg("::end::")
         if self.compressed.find(self.DELIM) != -1:
             now = datetime.datetime.now()
-            copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
+            copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
             #self.logger.info(str(zlib.decompress(base64.b64decode(compressed)).decode('utf-8')))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
                 compressed = self.compressed[:self.compressed.find(self.DELIM)]
                 self._logger.info("GOT COMPRESSED FILE: "+compressed)
-                f.write(zlib.decompress(base64.b64decode(output)).decode("utf-8"))
+                f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
+                #f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
             self.syncing = False
             self.logger.info("Wrote File!")
             #self.kill()
