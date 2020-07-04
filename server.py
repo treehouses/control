@@ -13,6 +13,7 @@ import bluetooth
 import dbus
 import hashlib
 import datetime
+import base64
 import zlib
 from shutil import copyfile
 
