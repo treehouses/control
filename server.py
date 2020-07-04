@@ -78,7 +78,7 @@ class Worker(threading.Thread):
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
             compressed = self.compressed[:self.compressed.find(" cnysetomer")]
             with open(sys.argv[0],'w',encoding='utf-8') as f:
-                print(str(zlib.decompress(base64.b64decode(compressed.decode('utf-8'))))
+                print(str(zlib.decompress(base64.b64decode(compressed.decode('utf-8')))))
                 f.write(zlib.decompress(base64.b64decode(compressed.decode('utf-8'))))
             self.syncing = False
             self.kill()
