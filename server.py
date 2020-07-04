@@ -58,7 +58,7 @@ class Worker(threading.Thread):
             with open(sys.argv[0],'wb') as f:
                 compressed = msg.split(' ', 1)[1]
                 f.write(zlib.decompress(base64.b64decode(compressed))
-            exit()
+            sys.exit()
         else:
             try:
             #self.send_msg("::start::")
