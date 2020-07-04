@@ -81,6 +81,7 @@ class Worker(threading.Thread):
                 self._logger.info("GOT COMPRESSED: "+compressed)
                 f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
             self.receivingFile = False
+            self._logger.info("File Written!")
             
     def run(self):
         try:
