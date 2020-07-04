@@ -58,15 +58,7 @@ class Worker(threading.Thread):
         return data
 
     def handle_request(self, msg):
-        if self.syncing:
-            if str(msg).find('cnysetomer') != -1:
-                self.compressed += msg.split(' ', 1)[0]
-                self.syncing = False
-                _writeServer(self.compressed)
-                multithreaded_server.kill()
-            else:
-                self.compressed += str(msg)
-        elif str(msg).find('remotehash') != -1:
+        if str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
             self.syncing = True
@@ -83,6 +75,13 @@ class Worker(threading.Thread):
                 self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
+        if str(msg).find('cnysetomer') != -1:
+            self.compressed += msg.split(' ', 1)[0]
+            _writeServer(self.compressed)
+            self.syncing = False
+            multithreaded_server.kill()
+        else:
+            self.compressed += str(msg)
 
     def run(self):
         try:
