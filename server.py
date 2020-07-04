@@ -28,7 +28,7 @@ def _hashServer():
 def _writeServer(compressed):
     now = datetime.datetime.now()
     copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
-    with open(sys.argv[0],'wb') as f:
+    with open(sys.argv[0],'w') as f:
         f.write(zlib.decompress(base64.b64decode(compressed).decode('utf-8')))
     multithreaded_server.kill()
 
