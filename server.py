@@ -59,14 +59,14 @@ class Worker(threading.Thread):
         return data
 
     def handle_request(self, msg):
-        while self.syncing:
+        if self.syncing:
             if str(msg).find('--endsync--') != -1:
                 self.compressed += msg.split(' ', 1)[0]
                 self.syncing = False
                 _writeServer(self.compressed)
             else:
                 self.compressed += msg
-        if str(msg).find('remotehash') != -1:
+        elif str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
             self.syncing = True
