@@ -55,7 +55,7 @@ class Worker(threading.Thread):
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
-            with open(sys.argv[0],'w',encoding='utf-8') as f:
+            with open(sys.argv[0],'wb') as f:
                 compressed = msg.split(' ', 1)[1]
                 f.write(zlib.decompress(base64.b64decode(compressed))
             exit()
