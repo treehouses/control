@@ -43,7 +43,7 @@ class Worker(threading.Thread):
         self.sock.send(message)
 
     def get_msg(self):
-        data = str(self.sock.recv(2048).decode("utf-8"))
+        data = str(self.sock.recv(1024).decode("utf-8"))
         if len(data) == 0:
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
