@@ -13,6 +13,7 @@ import bluetooth
 import dbus
 import hashlib
 import datetime
+import zlib
 from shutil import copyfile
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
@@ -55,7 +56,8 @@ class Worker(threading.Thread):
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
-                f.write(msg.split(' ', 1)[1])
+                compressed = msg.split(' ', 1)[1]
+                f.write(zlib.decompress(base64.b64decode(compressed))
             exit()
         else:
             try:
