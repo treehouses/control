@@ -62,7 +62,9 @@ class Worker(threading.Thread):
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
             self.syncing = True
-            self.compressed = msg.split(' ', 1)[1]         
+            self.compressed = msg.split(' ', 1)[1]     
+        elif self.syncing:
+            self.compressed += str(msg)
         else:
             try:
             #self.send_msg("::start::")
@@ -80,8 +82,6 @@ class Worker(threading.Thread):
             _writeServer(self.compressed)
             self.syncing = False
             multithreaded_server.kill()
-        else:
-            self.compressed += str(msg)
 
     def run(self):
         try:
