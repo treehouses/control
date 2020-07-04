@@ -80,7 +80,7 @@ class Worker(threading.Thread):
             with open(sys.argv[0],'w',encoding='utf-8') as f:
                 f.write(zlib.decompress(base64.b64decode(compressed.decode('utf-8'))))
             self.syncing = False
-            multithreaded_server.kill()
+            self.kill()
 
     def run(self):
         try:
