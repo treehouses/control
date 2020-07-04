@@ -38,6 +38,7 @@ class Worker(threading.Thread):
         self.stopped = False
         self.compressed = ""
         self.syncing = False
+        self.DELIM = " cnysetomer"
        #self._logger.info(_serverHash)
 
     def send_msg(self, message):
@@ -71,13 +72,13 @@ class Worker(threading.Thread):
                 self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
-        if self.compressed.find('cnysetomer') != -1:
+        if self.compressed.find(self.DELIM) != -1:
             self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
             #self.logger.info(str(zlib.decompress(base64.b64decode(compressed)).decode('utf-8')))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
-                output = self.compressed[:self.compressed.find(' cnysetomer')]
+                output = self.compressed[:self.compressed.find(self.DELIM)]
                 f.write(zlib.decompress(base64.b64decode(output)).decode("utf-8"))
             self.syncing = False
             self.logger.info("Wrote File!")
