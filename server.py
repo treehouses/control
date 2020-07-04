@@ -13,7 +13,7 @@ import bluetooth
 import dbus
 import hashlib
 import datetime
-from shutuil import copyfile
+from shutil import copyfile
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
