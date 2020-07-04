@@ -16,9 +16,6 @@ import datetime
 import zlib
 from shutil import copyfile
 
-_syncing = False
-_compressed = ""
-
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
     os.kill(os.getpid(), signal.SIGINT)
@@ -46,6 +43,8 @@ class Worker(threading.Thread):
         self.address = address
         self._logger = logging.getLogger("logger")
         self.stopped = False
+        self.compressed = ""
+        self.syncing = False
        #self._logger.info(_serverHash)
 
     def send_msg(self, message):
@@ -60,18 +59,18 @@ class Worker(threading.Thread):
         return data
 
     def handle_request(self, msg):
-        while _syncing:
+        while self.syncing:
             if str(msg).find('--endsync--') != -1:
-                _compressed += msg.split(' ', 1)[0]
-                _syncing = False
-                _writeServer(_compressed)
+                self.compressed += msg.split(' ', 1)[0]
+                self.syncing = False
+                _writeServer(self.compressed)
             else:
-                _compressed += msg
+                self.compressed += msg
         if str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
-            _syncing = True
-            _compressed = msg.split(' ', 1)[1]         
+            self.syncing = True
+            self.compressed = msg.split(' ', 1)[1]         
         else:
             try:
             #self.send_msg("::start::")
