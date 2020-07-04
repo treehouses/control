@@ -45,7 +45,7 @@ class Worker(threading.Thread):
         self.sock.send(message)
 
     def get_msg(self):
-        data = str(self.sock.recv(2048).decode("utf-8"))
+        data = str(self.sock.recv(1024).decode("utf-8"))
         if len(data) == 0:
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
@@ -75,9 +75,9 @@ class Worker(threading.Thread):
             self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
-            output = self.compressed[:self.compressed.find(' cnysetomer')]
             #self.logger.info(str(zlib.decompress(base64.b64decode(compressed)).decode('utf-8')))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
+                output = self.compressed[:self.compressed.find(' cnysetomer')]
                 f.write(zlib.decompress(base64.b64decode(output)).decode("utf-8"))
             self.syncing = False
             self.logger.info("Wrote File!")
