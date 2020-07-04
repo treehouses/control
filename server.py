@@ -57,7 +57,7 @@ class Worker(threading.Thread):
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
             with open(sys.argv[0],'wb') as f:
                 compressed = msg.split(' ', 1)[1]
-                f.write(zlib.decompress(base64.b64decode(compressed))
+                f.write(zlib.decompress(base64.b64decode(compressed)))
             sys.exit()
         else:
             try:
