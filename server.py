@@ -25,8 +25,8 @@ def _hashServer():
         serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
         return serverHash
 
-def _writeServer(compressed):
-    self._logger.info("GOT COMPRESSED FILE: "+compressed)
+def _writeServer(self):
+    self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
     now = datetime.datetime.now()
     copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
     with open(sys.argv[0],'w',encoding='utf-8') as f:
@@ -80,7 +80,7 @@ class Worker(threading.Thread):
             #self.send_msg("::end::")
         if str(msg).find('cnysetomer') != -1:
             self.compressed += msg.split(' ', 1)[0]
-            _writeServer(self.compressed)
+            _writeServer(self)
             self.syncing = False
             multithreaded_server.kill()
 
