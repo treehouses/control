@@ -11,10 +11,20 @@ import string
 import random
 import bluetooth
 import dbus
+import hashlib
+import datetime
+from shutil import copyfile
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
     os.kill(os.getpid(), signal.SIGINT)
+
+def _hashServerFile():
+    with open(sys.argv[0],'r',encoding='utf-8') as f:
+        serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
+        return serverHash
+
+_serverHash = _hashServerFile() # send this to remote to compare server versions
 
 #This is what gets spawned by the server when it receives a connection.
 # based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
@@ -25,31 +35,53 @@ class Worker(threading.Thread):
         self.address = address
         self._logger = logging.getLogger("logger")
         self.stopped = False
+        self.receivingFile = False
+        self.fileBuilder = ""
+        self.DELIMETER = "|END|"
+       #self._logger.info(_serverHash)
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
         self.sock.send(message)
 
     def get_msg(self):
-        data = str(self.sock.recv(1024).decode("utf-8"))
+        data = str(self.sock.recv(2048).decode("utf-8"))
         if len(data) == 0:
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
         return data
 
     def handle_request(self, msg):
-        try:
+        if str(msg).find('remotehash') != -1:
+            self.send_msg(str(_serverHash))
+        elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
+            self.receivingFile = True
+            self.fileBuilder = msg.split(' ', 1)[1]
+        elif self.receivingFile:
+            self.fileBuilder += str(msg)
+        else:
+            try:
             #self.send_msg("::start::")
-            result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
-            if not len(result):
-                self.send_msg("the command '%s' returns nothing " % msg)
-            for line in result.splitlines():
-                self.send_msg(line + " ")
-        except:
-            self.send_msg("Error when trying to run the command '%s' " % msg)
+                result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
+                if not len(result):
+                    self.send_msg("the command '%s' returns nothing " % msg)
+                for line in result.splitlines():
+                    self.send_msg(line + " ")
+            except:
+                self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
+        if self.fileBuilder.find(self.DELIMETER) != -1:
+            now = datetime.datetime.now()
+            copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
+            with open(sys.argv[0],'w',encoding='utf-8') as f:
+                compressed = self.fileBuilder[:self.fileBuilder.find(self.DELIMETER)]
+                self._logger.info("GOT COMPRESSED: "+compressed)
+                f.write(zlib.decompress(base64.b64decode(compressed.encode('utf-8'))))
+            self.receivingFile = False
+            sys.exit()
 
+            
     def run(self):
         try:
             while True:
