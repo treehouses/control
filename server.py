@@ -39,7 +39,7 @@ class Worker(threading.Thread):
         self.stopped = False
         self.receivingFile = False
         self.fileBuilder = ""
-        self.DELIMETER = "|END|"
+        self.DELIMETER = " cnysetomer"
        #self._logger.info(_serverHash)
 
     def send_msg(self, message):
