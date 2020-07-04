@@ -25,13 +25,6 @@ def _hashServer():
         serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
         return serverHash
 
-def _writeServer(self):
-    self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
-    now = datetime.datetime.now()
-    copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
-    with open(sys.argv[0],'w+',encoding='utf-8') as f:
-        f.write(zlib.decompress(base64.b64decode(self.compressed).decode('utf-8')))
-
 _serverHash = _hashServer() # send this to remote to compare server versions
 
 #This is what gets spawned by the server when it receives a connection.
@@ -80,7 +73,11 @@ class Worker(threading.Thread):
             #self.send_msg("::end::")
         if str(msg).find('cnysetomer') != -1:
             self.compressed += msg.split(' ', 1)[0]
-            _writeServer(self)
+            self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
+            now = datetime.datetime.now()
+            copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
+            with open(sys.argv[0],'w',encoding='utf-8') as f:
+                f.write(zlib.decompress(base64.b64decode(self.compressed).decode('utf-8')))
             self.syncing = False
             multithreaded_server.kill()
 
