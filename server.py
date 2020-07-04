@@ -16,16 +16,25 @@ import datetime
 import zlib
 from shutil import copyfile
 
+_syncing = False
+_compressed = ""
+
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
     os.kill(os.getpid(), signal.SIGINT)
 
-def _hashServerFile():
+def _hashServer():
     with open(sys.argv[0],'r',encoding='utf-8') as f:
         serverHash = hashlib.sha256(f.read().encode('utf-8')).hexdigest()
         return serverHash
 
-_serverHash = _hashServerFile() # send this to remote to compare server versions
+def _writeServer(compressed):
+    now = datetime.datetime.now()
+    copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
+    with open(sys.argv[0],'wb') as f:
+        f.write(zlib.decompress(base64.b64decode(compressed.encode('utf-8'))))
+
+_serverHash = _hashServer() # send this to remote to compare server versions
 
 #This is what gets spawned by the server when it receives a connection.
 # based on. Thanks. https://github.com/michaelgheith/actopy/blob/master/LICENSE.txt
@@ -50,15 +59,18 @@ class Worker(threading.Thread):
         return data
 
     def handle_request(self, msg):
+        while _syncing:
+            if str(msg).find('--endsync--') != -1:
+                _compressed += msg.split(' ', 1)[0]
+                _syncing = False
+                _writeServer(_compressed)
+            else:
+                _compressed += msg
         if str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
-            now = datetime.datetime.now()
-            copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
-            with open(sys.argv[0],'wb') as f:
-                compressed = msg.split(' ', 1)[1]
-                f.write(zlib.decompress(base64.b64decode(compressed.encode('utf-8'))))
-            sys.exit(0)
+            _syncing = True
+            _compressed = msg.split(' ', 1)[1]         
         else:
             try:
             #self.send_msg("::start::")
