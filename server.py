@@ -71,8 +71,7 @@ class Worker(threading.Thread):
                 self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
-        if str(msg).find('cnysetomer') != -1:
-            self.compressed += str(msg)
+        if self.compressed.find('cnysetomer') != -1:
             self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
