@@ -30,7 +30,7 @@ def _writeServer(compressed):
     copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
     with open(sys.argv[0],'wb') as f:
         f.write(zlib.decompress(base64.b64decode(compressed.encode('utf-8'))))
-    sys.exit(0)
+    multithreaded_server.kill()
 
 _serverHash = _hashServer() # send this to remote to compare server versions
 
