@@ -26,9 +26,10 @@ def _hashServer():
         return serverHash
 
 def _writeServer(compressed):
+    self._logger.info("GOT COMPRESSED FILE: "+compressed)
     now = datetime.datetime.now()
     copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
-    with open(sys.argv[0],'w') as f:
+    with open(sys.argv[0],'w',encoding='utf-8') as f:
         f.write(str(zlib.decompress(base64.b64decode(compressed).decode('utf-8'))))
 
 _serverHash = _hashServer() # send this to remote to compare server versions
