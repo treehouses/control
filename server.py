@@ -13,6 +13,8 @@ import bluetooth
 import dbus
 import hashlib
 import datetime
+import base64
+import zlib
 from shutil import copyfile
 
 def _ExceptionHandler(exc_type, exc_value, exc_traceback):
@@ -77,10 +79,8 @@ class Worker(threading.Thread):
             with open(sys.argv[0],'w',encoding='utf-8') as f:
                 compressed = self.fileBuilder[:self.fileBuilder.find(self.DELIMETER)]
                 self._logger.info("GOT COMPRESSED: "+compressed)
-                f.write(zlib.decompress(base64.b64decode(compressed.encode('utf-8'))))
+                f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
             self.receivingFile = False
-            sys.exit()
-
             
     def run(self):
         try:
