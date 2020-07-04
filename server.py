@@ -72,12 +72,13 @@ class Worker(threading.Thread):
         #finally:
             #self.send_msg("::end::")
         if str(msg).find('cnysetomer') != -1:
-            self.compressed += msg.split(' ', 1)[0]
+            self.compressed += str(msg)
             self._logger.info("GOT COMPRESSED FILE: "+self.compressed)
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%\d%H%M"))
+            compressed = self.compressed[:self.compressed.find(" cnysetomer")]
             with open(sys.argv[0],'w',encoding='utf-8') as f:
-                f.write(zlib.decompress(base64.b64decode(self.compressed).decode('utf-8')))
+                f.write(zlib.decompress(base64.b64decode(compressed.decode('utf-8')))
             self.syncing = False
             multithreaded_server.kill()
 
