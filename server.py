@@ -29,7 +29,7 @@ def _writeServer(compressed):
     now = datetime.datetime.now()
     copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
     with open(sys.argv[0],'wb') as f:
-        f.write(zlib.decompress(base64.b64decode(compressed).encode('utf-8')))
+        f.write(zlib.decompress(base64.b64decode(compressed).decode('utf-8')))
     multithreaded_server.kill()
 
 _serverHash = _hashServer() # send this to remote to compare server versions
@@ -60,7 +60,7 @@ class Worker(threading.Thread):
 
     def handle_request(self, msg):
         if self.syncing:
-            if str(msg).find('--endsync--') != -1:
+            if str(msg).find('cnysetomer') != -1:
                 self.compressed += msg.split(' ', 1)[0]
                 self.syncing = False
                 _writeServer(self.compressed)
