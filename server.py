@@ -29,8 +29,7 @@ def _writeServer(compressed):
     now = datetime.datetime.now()
     copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
     with open(sys.argv[0],'w') as f:
-        f.write(zlib.decompress(base64.b64decode(compressed).decode('utf-8')))
-    multithreaded_server.kill()
+        f.write(str(zlib.decompress(base64.b64decode(compressed).decode('utf-8'))))
 
 _serverHash = _hashServer() # send this to remote to compare server versions
 
@@ -64,8 +63,9 @@ class Worker(threading.Thread):
                 self.compressed += msg.split(' ', 1)[0]
                 self.syncing = False
                 _writeServer(self.compressed)
+                multithreaded_server.kill()
             else:
-                self.compressed += msg
+                self.compressed += str(msg)
         elif str(msg).find('remotehash') != -1:
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
