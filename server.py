@@ -36,7 +36,7 @@ class Worker(threading.Thread):
         self.address = address
         self._logger = logging.getLogger("logger")
         self.stopped = False
-        self.compressed = ""
+        self.compressor = ""
         self.syncing = False
         self.DELIM = " cnysetomer"
        #self._logger.info(_serverHash)
@@ -57,9 +57,9 @@ class Worker(threading.Thread):
             self.send_msg(str(_serverHash))
         elif str(msg).find('remotesync') != -1: #automatically accepts file with the right keyword, this is a prototype
             self.syncing = True
-            self.compressed = msg.split(' ', 1)[1]     
+            self.compressor = msg.split(' ', 1)[1]     
         elif self.syncing:
-            self.compressed += str(msg)
+            self.compressor += str(msg)
         else:
             try:
             #self.send_msg("::start::")
@@ -72,15 +72,14 @@ class Worker(threading.Thread):
                 self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
-        if self.compressed.find(self.DELIM) != -1:
+        if self.compressor.find(self.DELIMETER) != -1:
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
-            #self.logger.info(str(zlib.decompress(base64.b64decode(compressed)).decode('utf-8')))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
-                compressed = self.compressed[:self.compressed.find(self.DELIM)]
-                self._logger.info("GOT COMPRESSED FILE: "+compressed)
+                compressed = self.compressor[:self.compressor.find(self.DELIMETER)]
+                self._logger.info("GOT COMPRESSED: "+compressed)
                 f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
-                #f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
+            self.receivingFile = False
             self.syncing = False
             self.logger.info("Wrote File!")
             #self.kill()
