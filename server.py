@@ -40,14 +40,13 @@ class Worker(threading.Thread):
         self.receivingFile = False
         self.fileBuilder = ""
         self.DELIMETER = " cnysetomer"
-       #self._logger.info(_serverHash)
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
         self.sock.send(message)
 
     def get_msg(self):
-        data = str(self.sock.recv(1024).decode("utf-8"))
+        data = str(self.sock.recv(2048).decode("utf-8"))
         if len(data) == 0:
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
@@ -81,7 +80,6 @@ class Worker(threading.Thread):
                 self._logger.info("GOT COMPRESSED: "+compressed)
                 f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
             self.receivingFile = False
-            self._logger.info("File Written!")
             
     def run(self):
         try:
