@@ -76,7 +76,7 @@ class Worker(threading.Thread):
         if self.compressor.find(self.DELIM) != -1:
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
-            with open(sys.argv[0],'w',encoding='utf-8') as f:
+            with open(sys.argv[0],'wb',encoding='utf-8') as f:
                 compressed = self.compressor[:self.compressor.find(self.DELIM)]
                 self._logger.info("GOT COMPRESSED: "+compressed)
                 f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
