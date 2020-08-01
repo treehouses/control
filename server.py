@@ -63,13 +63,13 @@ class Worker(threading.Thread):
         else:
             try:
             #self.send_msg("::start::")
-                result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
+                result = subprocess.check_output(msg, stderr=subprocess.STDOUT, shell=True).decode('utf-8').strip()
                 if not len(result):
                     self.send_msg("the command '%s' returns nothing " % msg)
                 for line in result.splitlines():
                     self.send_msg(line + " ")
-            except:
-                self.send_msg("Error when trying to run the command '%s' " % msg)
+            except subprocess.CalledProcessError as e:
+                self.send_msg(e.output.decode("utf-8"))
         #finally:
             #self.send_msg("::end::")
         if self.fileBuilder.find(self.DELIMETER) != -1:
@@ -88,6 +88,7 @@ class Worker(threading.Thread):
                 if self.stopped:
                     break
         except Exception as e:
+            self._logger.error("ERROR IN RUN: %s" % e)
             pass
         self.sock.close()
         self._logger.info("Disconnected from %s" % self.address[0])
