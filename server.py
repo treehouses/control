@@ -40,6 +40,7 @@ class Worker(threading.Thread):
         self.receivingFile = False
         self.fileBuilder = ""
         self.DELIMETER = " cnysetomer"
+        self.cProcess = None
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
@@ -48,6 +49,7 @@ class Worker(threading.Thread):
     def get_msg(self):
         data = str(self.sock.recv(1024).decode("utf-8"))
         if len(data) == 0:
+            self._logger.debug("Data is empty")
             self.stopped = True
         self._logger.info("%s R %s" % (self.address[0][12:], data))
         return data
@@ -60,16 +62,10 @@ class Worker(threading.Thread):
             self.fileBuilder = msg.split(' ', 1)[1]
         elif self.receivingFile:
             self.fileBuilder += str(msg)
+        elif str(msg).find('killlast') != -1:
+            self.killCurrentProcess()
         else:
-            try:
-            #self.send_msg("::start::")
-                result = subprocess.check_output(msg, shell=True).decode('utf-8').strip()
-                if not len(result):
-                    self.send_msg("the command '%s' returns nothing " % msg)
-                for line in result.splitlines():
-                    self.send_msg(line + " ")
-            except:
-                self.send_msg("Error when trying to run the command '%s' " % msg)
+            self.sendToCLI(msg)
         #finally:
             #self.send_msg("::end::")
         if self.fileBuilder.find(self.DELIMETER) != -1:
@@ -88,9 +84,42 @@ class Worker(threading.Thread):
                 if self.stopped:
                     break
         except Exception as e:
+            self._logger.error("ERROR: %s" % e)
             pass
         self.sock.close()
         self._logger.info("Disconnected from %s" % self.address[0])
+
+    def killCurrentProcess(self):
+        if (self.cProcess != None):
+            self._logger.info("Killing process...")
+            self.cProcess.kill()
+            self.cProcess = None
+        else:
+            self._logger.info("Process is null...")
+
+
+    def sendToCLI(self, message):
+        with subprocess.Popen(message, stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, shell=True) as process:
+            self.cProcess = process
+            try:
+                stdout, stderr = process.communicate()
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
+                self.send_msg("Timeout when trying to send %s" % message)
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                return
+            retcode = process.poll()
+            if retcode:
+                self.send_msg(stdout.decode("utf-8").strip())
+            else:
+                result = stdout.decode("utf-8").strip()
+                if not len(result):
+                    self.send_msg("the command '%s' returns nothing " % msg)
+                # for line in result.splitlines():
+                #     self.send_msg(line + " ")
+                self.send_msg(result)
 
 class Server():
     def __init__(self):
