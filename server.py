@@ -40,7 +40,7 @@ class Worker(threading.Thread):
         self.receivingFile = False
         self.fileBuilder = ""
         self.DELIMETER = " cnysetomer"
-        self.cProcess = None
+        self.processes = []
 
     def send_msg(self, message):
         self._logger.info("%s S - %s" % (self.address[0][12:], message))
@@ -66,8 +66,6 @@ class Worker(threading.Thread):
             self.killCurrentProcess()
         else:
             self.sendToCLI(msg)
-        #finally:
-            #self.send_msg("::end::")
         if self.fileBuilder.find(self.DELIMETER) != -1:
             now = datetime.datetime.now()
             copyfile(sys.argv[0], sys.argv[0] + now.strftime("%Y%m%d%H%M"))
@@ -89,18 +87,16 @@ class Worker(threading.Thread):
         self.sock.close()
         self._logger.info("Disconnected from %s" % self.address[0])
 
-    def killCurrentProcess(self):
-        if (self.cProcess != None):
-            self._logger.info("Killing process...")
-            self.cProcess.kill()
-            self.cProcess = None
+    def killLastProcess(self):
+        if (self.processes):
+            self._logger.info("Killing last process...")
+            self.processes.pop().kill()
         else:
-            self._logger.info("Process is null...")
+            self._logger.info("Processes is empty...")
 
     def startProcess(self, process):
         self._logger.info("Starting Process...")
         try:
-            self._logger.info("Start Communicating...")
             stdout, stderr = process.communicate()
             self._logger.info("Finish Communicating...")
         except subprocess.TimeoutExpired:
@@ -112,21 +108,23 @@ class Worker(threading.Thread):
             process.kill()
             return
         retcode = process.poll()
-        if retcode:
+        if retcode: # ERROR OCCURRED
             self._logger.info("Returned...")
-            self.send_msg(stdout.decode("utf-8").strip())
+            self.send_msg("ERROR: %s" % stdout.decode("utf-8").strip())
         else:
             self._logger.info("Result...")
             result = stdout.decode("utf-8").strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
-            # for line in result.splitlines():
-            #     self.send_msg(line + " ")
             self.send_msg(result)
+        
+        if (process in self.processes):
+            self.processes.remove(process)
 
     def sendToCLI(self, message):
-        self.cProcess = subprocess.Popen(message, stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, shell=True)
-        thread = threading.Thread(target = self.startProcess, args=(self.cProcess, ))
+        process = subprocess.Popen(message, stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, shell=True)
+        self.processes.append(process)
+        thread = threading.Thread(target = self.startProcess, args=(process, ))
         thread.start()
 
 
