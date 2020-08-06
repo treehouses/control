@@ -62,8 +62,8 @@ class Worker(threading.Thread):
             self.fileBuilder = msg.split(' ', 1)[1]
         elif self.receivingFile:
             self.fileBuilder += str(msg)
-        elif str(msg).find('killlast') != -1:
-            self.killCurrentProcess()
+        elif str(msg).find('killall') != -1:
+            self.killAllProcesses()
         else:
             self.sendToCLI(msg)
         if self.fileBuilder.find(self.DELIMETER) != -1:
@@ -87,18 +87,18 @@ class Worker(threading.Thread):
         self.sock.close()
         self._logger.info("Disconnected from %s" % self.address[0])
 
-    def killLastProcess(self):
-        if (self.processes):
-            self._logger.info("Killing last process...")
-            self.processes.pop().kill()
-        else:
-            self._logger.info("Processes is empty...")
+    def killAllProcesses(self):
+        self._logger.info("Killing %d processes..." % len(self.processes))
+        for process in self.processes:
+            process.kill()
+        self.processes = []
+        self._logger.info("Killed all processes")
 
     def startProcess(self, process):
         self._logger.info("Starting Process...")
         try:
             stdout, stderr = process.communicate()
-            self._logger.info("Finish Communicating...")
+            self._logger.info("Finish Communicating")
         except subprocess.TimeoutExpired:
             process.kill()
             stdout, stderr = process.communicate()
@@ -109,10 +109,10 @@ class Worker(threading.Thread):
             return
         retcode = process.poll()
         if retcode: # ERROR OCCURRED
-            self._logger.info("Returned...")
-            self.send_msg("ERROR: %s" % stdout.decode("utf-8").strip())
+            self._logger.info("Returned Error %s" % stderr.decode("utf-8").strip())
+            self.send_msg("ERROR: %s %s" % (stdout.decode("utf-8").strip(), stderr.decode("utf-8").strip()))
         else:
-            self._logger.info("Result...")
+            self._logger.info("Result")
             result = stdout.decode("utf-8").strip()
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
