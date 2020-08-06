@@ -82,7 +82,7 @@ class Worker(threading.Thread):
                 if self.stopped:
                     break
         except Exception as e:
-            self._logger.error("ERROR: %s" % e)
+            self._logger.error("ERROR IN RUN: %s" % e)
             pass
         self.sock.close()
         self._logger.info("Disconnected from %s" % self.address[0])
