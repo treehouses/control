@@ -110,12 +110,12 @@ class Worker(threading.Thread):
         retcode = process.poll()
         if retcode: # ERROR OCCURRED
             if (process in self.processes):
-                self.send_msg("ERROR: %s %s" % (stdout.decode("utf-8").strip(), stderr.decode("utf-8").strip()))
+                self.send_msg("ERROR: %s %s" % (stdout.decode("utf-8"), stderr.decode("utf-8")))
             else:
                 self._logger.info("Interrupted %s" % message)
         else:
             self._logger.info("Result")
-            result = stdout.decode("utf-8").strip()
+            result = stdout.decode("utf-8")
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
             self.send_msg(result)
