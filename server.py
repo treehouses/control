@@ -97,29 +97,38 @@ class Worker(threading.Thread):
         else:
             self._logger.info("Process is null...")
 
+    def startProcess(self, process):
+        self._logger.info("Starting Process...")
+        try:
+            self._logger.info("Start Communicating...")
+            stdout, stderr = process.communicate()
+            self._logger.info("Finish Communicating...")
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            self.send_msg("Timeout when trying to send %s" % message)
+        except Exception as e:  # Including KeyboardInterrupt, communicate handled that.
+            self._logger.error("ERROR...%s" % e)
+            process.kill()
+            return
+        retcode = process.poll()
+        if retcode:
+            self._logger.info("Returned...")
+            self.send_msg(stdout.decode("utf-8").strip())
+        else:
+            self._logger.info("Result...")
+            result = stdout.decode("utf-8").strip()
+            if not len(result):
+                self.send_msg("the command '%s' returns nothing " % msg)
+            # for line in result.splitlines():
+            #     self.send_msg(line + " ")
+            self.send_msg(result)
 
     def sendToCLI(self, message):
-        with subprocess.Popen(message, stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, shell=True) as process:
-            self.cProcess = process
-            try:
-                stdout, stderr = process.communicate()
-            except subprocess.TimeoutExpired:
-                process.kill()
-                stdout, stderr = process.communicate()
-                self.send_msg("Timeout when trying to send %s" % message)
-            except:  # Including KeyboardInterrupt, communicate handled that.
-                process.kill()
-                return
-            retcode = process.poll()
-            if retcode:
-                self.send_msg(stdout.decode("utf-8").strip())
-            else:
-                result = stdout.decode("utf-8").strip()
-                if not len(result):
-                    self.send_msg("the command '%s' returns nothing " % msg)
-                # for line in result.splitlines():
-                #     self.send_msg(line + " ")
-                self.send_msg(result)
+        self.cProcess = subprocess.Popen(message, stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, shell=True)
+        thread = threading.Thread(target = self.startProcess, args=(self.cProcess, ))
+        thread.start()
+
 
 class Server():
     def __init__(self):
