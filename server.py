@@ -94,7 +94,7 @@ class Worker(threading.Thread):
         self.processes = []
         self._logger.info("Killed all processes")
 
-    def startProcess(self, process):
+    def startProcess(self, process, message):
         self._logger.info("Starting Process...")
         try:
             stdout, stderr = process.communicate()
@@ -109,8 +109,10 @@ class Worker(threading.Thread):
             return
         retcode = process.poll()
         if retcode: # ERROR OCCURRED
-            self._logger.info("Returned Error %s" % stderr.decode("utf-8").strip())
-            self.send_msg("ERROR: %s %s" % (stdout.decode("utf-8").strip(), stderr.decode("utf-8").strip()))
+            if (process in self.processes):
+                self.send_msg("ERROR: %s %s" % (stdout.decode("utf-8").strip(), stderr.decode("utf-8").strip()))
+            else:
+                self._logger.info("Interrupted %s" % message)
         else:
             self._logger.info("Result")
             result = stdout.decode("utf-8").strip()
@@ -124,7 +126,7 @@ class Worker(threading.Thread):
     def sendToCLI(self, message):
         process = subprocess.Popen(message, stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE, shell=True)
         self.processes.append(process)
-        thread = threading.Thread(target = self.startProcess, args=(process, ))
+        thread = threading.Thread(target = self.startProcess, args=(process, message, ))
         thread.start()
 
 
