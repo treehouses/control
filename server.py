@@ -118,7 +118,8 @@ class Worker(threading.Thread):
             result = stdout.decode("utf-8")
             if not len(result):
                 self.send_msg("the command '%s' returns nothing " % msg)
-            self.send_msg(result)
+            else:
+                self.send_msg(result)
         
         if (process in self.processes):
             self.processes.remove(process)
