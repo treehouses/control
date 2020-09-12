@@ -180,8 +180,16 @@ if __name__ == "__main__":
     handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter("%(asctime)s: %(message)s")
     logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-    logger.info("Debug logs enabled")
+    f = open("/etc/treehouses.conf", "r")
+    for line in f:
+        if "bluetoothlog=" in line:
+            if "1" in line:
+                logger.setLevel(logging.DEBUG)
+                logger.info("Debug logs enabled")
+            else:
+                logger.setLevel(logging.ERROR)
+                logger.info("Debug logs disabled")
+						
     try:
         multithreaded_server = Server()
         multithreaded_server.run()
