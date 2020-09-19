@@ -180,6 +180,11 @@ if __name__ == "__main__":
     handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter("%(asctime)s: %(message)s")
     logger.addHandler(handler)
+    fh = logging.FileHandler('/var/log/bluetooth.log', 'a')
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(funcName)s:%(lineno)d %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
     f = open("/etc/treehouses.conf", "r")
     for line in f:
         if "bluetoothlog=" in line:
