@@ -195,10 +195,26 @@ if __name__ == "__main__":
             if "1" in line:
                 logger.setLevel(logging.DEBUG)
                 logger.info("Debug logs enabled")
+            elif "2" in line:
+                logger.setLevel(logging.INFO)
+                logger.info("Info logs enabled")
+            elif "3" in line:
+                logger.setLevel(logging.INFO)
+                logger.info("Warning logs enabled")
+            elif "4" in line:
+                logger.setLevel(logging.INFO)
+                logger.info("Error logs enabled")
+            elif "5" in line:
+                logger.setLevel(logging.INFO)
+                logger.info("Critical logs enabled")
             else:
-                logger.setLevel(logging.ERROR)
-                logger.info("Debug logs disabled")
-						
+              print('Error in logging config')	
+    try:
+        multithreaded_server = Server()
+        multithreaded_server.run()
+    except KeyboardInterrupt:
+        self._logger.info("shutting down the server")
+        multithreaded_server.kill()
     try:
         multithreaded_server = Server()
         multithreaded_server.run()
