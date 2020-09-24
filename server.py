@@ -180,8 +180,48 @@ if __name__ == "__main__":
     handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter("%(asctime)s: %(message)s")
     logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
-    logger.info("Debug logs enabled")
+    fh = logging.FileHandler('/var/log/bluetooth.log', mode= 'a')
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(funcName)s:%(lineno)d %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    try:
+        f = open("/etc/treehouses.conf", "r")
+        for line2 in f:
+                if "bluetoothlog=" in line2 and "1" in line2:
+                    for line in f:
+                        if "bluetoothloglevel=" in line:
+                            if "1" in line:
+                                logger.setLevel(logging.DEBUG)
+                                logger.info("Debug logs enabled")
+                            elif "2" in line:
+                                logger.setLevel(logging.INFO)
+                                logger.info("Info logs enabled")
+                            elif "3" in line:
+                                logger.setLevel(logging.WARNING)
+                                logger.info("Warning logs enabled")
+                            elif "4" in line:
+                                logger.setLevel(logging.ERROR)
+                                logger.info("Error logs enabled")
+                            elif "5" in line:
+                                logger.setLevel(logging.CRITICAL)
+                                logger.info("Critical logs enabled")
+                            else:
+                                print('Error in logging config')	
+                else:
+                    logger.setLevel(logging.ERROR)
+                    logger.info("Error logs enabled")
+    except IOError:
+        print("config file not found")
+        f = ''
+        
+                
+    try:
+        multithreaded_server = Server()
+        multithreaded_server.run()
+    except KeyboardInterrupt:
+        self._logger.info("shutting down the server")
+        multithreaded_server.kill()
     try:
         multithreaded_server = Server()
         multithreaded_server.run()
