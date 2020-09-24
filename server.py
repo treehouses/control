@@ -187,33 +187,34 @@ if __name__ == "__main__":
     logger.addHandler(fh)
     try:
         f = open("/etc/treehouses.conf", "r")
+        for line2 in f:
+                if "bluetoothlog=" in line2 and "1" in line2:
+                    for line in f:
+                        if "bluetoothloglevel=" in line:
+                            if "1" in line:
+                                logger.setLevel(logging.DEBUG)
+                                logger.info("Debug logs enabled")
+                            elif "2" in line:
+                                logger.setLevel(logging.INFO)
+                                logger.info("Info logs enabled")
+                            elif "3" in line:
+                                logger.setLevel(logging.WARNING)
+                                logger.info("Warning logs enabled")
+                            elif "4" in line:
+                                logger.setLevel(logging.ERROR)
+                                logger.info("Error logs enabled")
+                            elif "5" in line:
+                                logger.setLevel(logging.CRITICAL)
+                                logger.info("Critical logs enabled")
+                            else:
+                                print('Error in logging config')	
+                else:
+                    logger.setLevel(logging.ERROR)
+                    logger.info("Error logs enabled")
     except IOError:
         print("config file not found")
         f = ''
         
-        for line in f:
-                if "bluetoothlog=" in line and "1" in line:
-                    if "bluetoothloglevel=" in line:
-                        if "1" in line:
-                            logger.setLevel(logging.DEBUG)
-                            logger.info("Debug logs enabled")
-                        elif "2" in line:
-                            logger.setLevel(logging.INFO)
-                            logger.info("Info logs enabled")
-                        elif "3" in line:
-                            logger.setLevel(logging.WARNING)
-                            logger.info("Warning logs enabled")
-                        elif "4" in line:
-                            logger.setLevel(logging.ERROR)
-                            logger.info("Error logs enabled")
-                        elif "5" in line:
-                            logger.setLevel(logging.CRITICAL)
-                            logger.info("Critical logs enabled")
-                        else:
-                            print('Error in logging config')	
-                else:
-                    logger.setLevel(logging.ERROR)
-                    logger.info("Error logs enabled")
                 
     try:
         multithreaded_server = Server()
